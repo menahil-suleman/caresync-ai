@@ -1,0 +1,1 @@
+# CareSync AI root package

@@ -1,0 +1,28 @@
+# ── Core ──────────────────────────────────────────────────────────────────────
+python-dotenv==1.0.1
+pydantic==2.7.1
+
+# ── Document loading & chunking ───────────────────────────────────────────────
+langchain==0.2.6
+langchain-community==0.2.6
+langchain-text-splitters==0.2.2
+pypdf==4.2.0
+unstructured==0.14.6
+
+# ── Embeddings ────────────────────────────────────────────────────────────────
+sentence-transformers==3.0.1
+
+# ── Vector store (pgvector) ───────────────────────────────────────────────────
+psycopg2-binary==2.9.9
+pgvector==0.3.2
+sqlalchemy==2.0.31
+
+# ── Local LLM via Ollama ──────────────────────────────────────────────────────
+ollama==0.2.1
+
+# ── Q&A generation ────────────────────────────────────────────────────────────
+tqdm==4.66.4
+datasets==2.20.0
+
+# ── Logging / utils ───────────────────────────────────────────────────────────
+loguru==0.7.2

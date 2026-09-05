@@ -1,0 +1,56 @@
+# ── Environment ───────────────────────────────────────────────────────────────
+.env
+*.env
+
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# ── Virtual environments ──────────────────────────────────────────────────────
+venv/
+.venv/
+env/
+ENV/
+
+# ── Data — never commit raw docs or generated data ────────────────────────────
+data/raw_docs/*
+data/wearable/*
+data/qa_pairs/*
+!data/raw_docs/.gitkeep
+!data/wearable/.gitkeep
+!data/qa_pairs/.gitkeep
+
+# ── Model weights (too large for git) ─────────────────────────────────────────
+*.bin
+*.safetensors
+*.pt
+*.pth
+*.ckpt
+models/
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+logs/*
+!logs/.gitkeep
+*.log
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Jupyter ───────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
