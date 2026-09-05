@@ -4,20 +4,24 @@
 #
 # Steps:
 # 1. Upload your raw_docs PDFs as a Kaggle dataset
-# 2. Create a new Kaggle notebook, enable GPU T4
-# 3. Paste this script into cells and run
+# 2. Create a new Kaggle notebook, enable GPU T4 + Internet ON
+# 3. Paste this entire script and run all cells
 # ============================================================
 
 # ── CELL 1: Install ───────────────────────────────────────────
-# !pip install -q transformers pypdf tqdm
+# !pip install -q transformers pypdf tqdm accelerate
 
 # ── CELL 2: Imports ───────────────────────────────────────────
-import json, re, os
+import json, re, os, torch
 from pathlib import Path
 from pypdf import PdfReader
 from tqdm import tqdm
-import torch
-from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+print(f"GPU available: {torch.cuda.is_available()}")
+if torch.cuda.is_available():
+    print(f"GPU: {torch.cuda.get_device_name(0)}")
+    print(f"VRAM: {torch.cuda.get_device_properties(0).total_memory / 1e9:.1f} GB")
 
 # ── CELL 3: Config ────────────────────────────────────────────
 DOCS_DIR    = "/kaggle/input/caresync-docs/"   # update to your dataset path
@@ -58,22 +62,20 @@ max_chunks = int((TARGET / 2) * 1.3)
 chunks_to_use = all_chunks[:max_chunks]
 print(f"Using first {len(chunks_to_use)} chunks to generate {TARGET} pairs")
 
-# ── CELL 5: Load Phi-3 mini in 4-bit ─────────────────────────
-print("Loading Phi-3 mini...")
-bnb = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_quant_type="nf4",
-    bnb_4bit_compute_dtype=torch.float16,
-)
+# ── CELL 5: Load Phi-3 mini (fp16, no quantization needed on T4) ──
+print("\nLoading Phi-3 mini (fp16)...")
 model = AutoModelForCausalLM.from_pretrained(
-    MODEL_ID, quantization_config=bnb,
-    device_map="auto", trust_remote_code=True,
+    MODEL_ID,
+    device_map="auto",
+    trust_remote_code=True,
+    torch_dtype=torch.float16,
 )
 tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
 tokenizer.pad_token = tokenizer.eos_token
+model.eval()
 print("Model ready.")
 
-# ── CELL 6: Q&A generation ────────────────────────────────────
+# ── CELL 6: Q&A generation function ──────────────────────────
 SYSTEM = 'Output ONLY valid JSON, no explanation. Format: [{"question":"...","answer":"..."},{"question":"...","answer":"..."}]'
 
 def generate_qa(chunk_text):
@@ -96,31 +98,35 @@ def generate_qa(chunk_text):
         skip_special_tokens=True
     ).strip()
 
-    # Extract JSON array robustly
+    # Extract JSON array robustly — handles extra text around the array
     raw = re.sub(r"```(?:json)?", "", raw).strip()
     match = re.search(r"\[.*?\]", raw, re.DOTALL)
     if not match:
         return []
-
     try:
         pairs = json.loads(match.group())
         return [
             {"question": p["question"].strip(), "answer": p["answer"].strip()}
             for p in pairs
             if isinstance(p, dict)
-            and len(p.get("question","").strip()) > 10
-            and len(p.get("answer","").strip()) > 10
+            and len(p.get("question", "").strip()) > 10
+            and len(p.get("answer", "").strip()) > 10
         ]
     except Exception:
         return []
 
-# Generate
+# ── CELL 7: Run generation ────────────────────────────────────
 all_pairs = []
+failed = 0
+
 with open(OUTPUT_FILE, "w") as f:
     for chunk in tqdm(chunks_to_use, desc="Generating Q&A"):
         if len(all_pairs) >= TARGET:
             break
-        for pair in generate_qa(chunk["text"]):
+        pairs = generate_qa(chunk["text"])
+        if not pairs:
+            failed += 1
+        for pair in pairs:
             record = {
                 "question": pair["question"],
                 "answer":   pair["answer"],
@@ -133,13 +139,14 @@ with open(OUTPUT_FILE, "w") as f:
                 break
 
 print(f"\n✓ Generated {len(all_pairs)} Q&A pairs")
-print(f"Saved to: {OUTPUT_FILE}")
+print(f"  Failed chunks: {failed}")
+print(f"  Saved to: {OUTPUT_FILE}")
 
-# ── CELL 7: Preview ───────────────────────────────────────────
+# ── CELL 8: Preview first 5 pairs ────────────────────────────
 print("\nFirst 5 pairs:\n")
 for i, p in enumerate(all_pairs[:5], 1):
     print(f"[{i}] Q: {p['question']}")
     print(f"    A: {p['answer']}")
     print(f"    Src: {p['source']}\n")
 
-print("\nDownload qa_pairs.jsonl from Kaggle output → save to data/qa_pairs/")
+print("Download qa_pairs.jsonl from Kaggle output tab → save to data/qa_pairs/")
