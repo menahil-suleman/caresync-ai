@@ -1,0 +1,145 @@
+# ============================================================
+# CareSync AI — Q&A Generation on Kaggle GPU
+# Run this as a Kaggle notebook to generate qa_pairs.jsonl fast
+#
+# Steps:
+# 1. Upload your raw_docs PDFs as a Kaggle dataset
+# 2. Create a new Kaggle notebook, enable GPU T4
+# 3. Paste this script into cells and run
+# ============================================================
+
+# ── CELL 1: Install ───────────────────────────────────────────
+# !pip install -q transformers pypdf tqdm
+
+# ── CELL 2: Imports ───────────────────────────────────────────
+import json, re, os
+from pathlib import Path
+from pypdf import PdfReader
+from tqdm import tqdm
+import torch
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
+
+# ── CELL 3: Config ────────────────────────────────────────────
+DOCS_DIR    = "/kaggle/input/caresync-docs/"   # update to your dataset path
+OUTPUT_FILE = "/kaggle/working/qa_pairs.jsonl"
+TARGET      = 300
+CHUNK_SIZE  = 350
+CHUNK_OVERLAP = 50
+MODEL_ID    = "microsoft/Phi-3-mini-4k-instruct"
+
+# ── CELL 4: Load + chunk PDFs ─────────────────────────────────
+def load_pdfs(docs_dir):
+    docs = []
+    for f in sorted(Path(docs_dir).glob("*.pdf")):
+        reader = PdfReader(str(f))
+        text = "\n\n".join(p.extract_text() or "" for p in reader.pages)
+        docs.append((f.name, text))
+        print(f"Loaded: {f.name} ({len(reader.pages)} pages)")
+    return docs
+
+def split_text(text, chunk_size=350, overlap=50):
+    chunks, start = [], 0
+    while start < len(text):
+        end = start + chunk_size
+        chunks.append(text[start:end])
+        start += chunk_size - overlap
+    return [c.strip() for c in chunks if c.strip()]
+
+docs = load_pdfs(DOCS_DIR)
+all_chunks = []
+for source, text in docs:
+    for i, chunk in enumerate(split_text(text, CHUNK_SIZE, CHUNK_OVERLAP)):
+        all_chunks.append({"text": chunk, "source": source, "chunk_id": i})
+
+print(f"\nTotal chunks: {len(all_chunks)}")
+
+# Only use enough chunks to hit target (target/2 * 1.3 buffer)
+max_chunks = int((TARGET / 2) * 1.3)
+chunks_to_use = all_chunks[:max_chunks]
+print(f"Using first {len(chunks_to_use)} chunks to generate {TARGET} pairs")
+
+# ── CELL 5: Load Phi-3 mini in 4-bit ─────────────────────────
+print("Loading Phi-3 mini...")
+bnb = BitsAndBytesConfig(
+    load_in_4bit=True,
+    bnb_4bit_quant_type="nf4",
+    bnb_4bit_compute_dtype=torch.float16,
+)
+model = AutoModelForCausalLM.from_pretrained(
+    MODEL_ID, quantization_config=bnb,
+    device_map="auto", trust_remote_code=True,
+)
+tokenizer = AutoTokenizer.from_pretrained(MODEL_ID, trust_remote_code=True)
+tokenizer.pad_token = tokenizer.eos_token
+print("Model ready.")
+
+# ── CELL 6: Q&A generation ────────────────────────────────────
+SYSTEM = 'Output ONLY valid JSON, no explanation. Format: [{"question":"...","answer":"..."},{"question":"...","answer":"..."}]'
+
+def generate_qa(chunk_text):
+    prompt = (
+        f"<|system|>\n{SYSTEM}<|end|>\n"
+        f"<|user|>\nPassage: {chunk_text[:600]}\n\nGive 2 medical Q&A pairs as JSON:<|end|>\n"
+        f"<|assistant|>\n"
+    )
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    with torch.no_grad():
+        out = model.generate(
+            **inputs,
+            max_new_tokens=250,
+            temperature=0.3,
+            do_sample=True,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+    raw = tokenizer.decode(
+        out[0][inputs["input_ids"].shape[1]:],
+        skip_special_tokens=True
+    ).strip()
+
+    # Extract JSON array robustly
+    raw = re.sub(r"```(?:json)?", "", raw).strip()
+    match = re.search(r"\[.*?\]", raw, re.DOTALL)
+    if not match:
+        return []
+
+    try:
+        pairs = json.loads(match.group())
+        return [
+            {"question": p["question"].strip(), "answer": p["answer"].strip()}
+            for p in pairs
+            if isinstance(p, dict)
+            and len(p.get("question","").strip()) > 10
+            and len(p.get("answer","").strip()) > 10
+        ]
+    except Exception:
+        return []
+
+# Generate
+all_pairs = []
+with open(OUTPUT_FILE, "w") as f:
+    for chunk in tqdm(chunks_to_use, desc="Generating Q&A"):
+        if len(all_pairs) >= TARGET:
+            break
+        for pair in generate_qa(chunk["text"]):
+            record = {
+                "question": pair["question"],
+                "answer":   pair["answer"],
+                "source":   chunk["source"],
+                "chunk_id": chunk["chunk_id"],
+            }
+            f.write(json.dumps(record) + "\n")
+            all_pairs.append(record)
+            if len(all_pairs) >= TARGET:
+                break
+
+print(f"\n✓ Generated {len(all_pairs)} Q&A pairs")
+print(f"Saved to: {OUTPUT_FILE}")
+
+# ── CELL 7: Preview ───────────────────────────────────────────
+print("\nFirst 5 pairs:\n")
+for i, p in enumerate(all_pairs[:5], 1):
+    print(f"[{i}] Q: {p['question']}")
+    print(f"    A: {p['answer']}")
+    print(f"    Src: {p['source']}\n")
+
+print("\nDownload qa_pairs.jsonl from Kaggle output → save to data/qa_pairs/")
