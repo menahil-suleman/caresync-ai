@@ -1,21 +1,12 @@
 """
-retriever.py — Semantic retrieval from pgvector
-
-Given a user query, this module:
-  1. Embeds the query using the same model used during ingestion
-  2. Runs cosine similarity search against document_chunks in pgvector
-  3. Returns top-k chunks as plain strings (ready for LLM context)
+retriever.py — Cosine similarity search against pgvector (zero LangChain)
 
 Public API:
-    retrieve(query: str, top_k: int = None) -> List[dict]
+    retrieve(query, top_k) -> List[dict]
+    format_context(chunks) -> str
 
-Each returned dict has:
-    {
-        "content": str,       # chunk text
-        "source":  str,       # filename it came from
-        "chunk_id": int,      # position within source doc
-        "score":   float      # cosine similarity (0–1, higher = more relevant)
-    }
+Each result dict:
+    {"content": str, "source": str, "chunk_id": int, "score": float}
 """
 
 from typing import List, Optional
@@ -23,29 +14,26 @@ from typing import List, Optional
 from loguru import logger
 from sqlalchemy import text
 
-from config import DBConfig, RAGConfig
+from config import RAGConfig
 from knowledge_layer.embedder import embed_texts, get_engine
 
 
 def retrieve(query: str, top_k: Optional[int] = None) -> List[dict]:
     """
-    Semantic search: embed query → cosine similarity → top-k chunks.
+    Embed query → cosine similarity search → return top-k chunks.
 
     Args:
-        query:  User question or search string.
-        top_k:  Number of chunks to return. Defaults to RAGConfig.top_k.
+        query:  User's question.
+        top_k:  How many chunks to return (default: RAGConfig.top_k).
 
     Returns:
-        List of dicts with keys: content, source, chunk_id, score.
-        Sorted by similarity descending (best match first).
+        List of dicts sorted by similarity descending.
     """
     k = top_k or RAGConfig.top_k
 
-    # 1. Embed the query
-    query_embedding = embed_texts([query])[0]  # shape: (dim,)
+    # Embed the query (single string → shape (1, dim) → take [0])
+    query_vec = embed_texts([query])[0]
 
-    # 2. Query pgvector using <=> (cosine distance operator)
-    #    cosine similarity = 1 - cosine_distance
     sql = text("""
         SELECT
             content,
@@ -57,14 +45,10 @@ def retrieve(query: str, top_k: Optional[int] = None) -> List[dict]:
         LIMIT :k
     """)
 
-    engine = get_engine()
-    with engine.connect() as conn:
+    with get_engine().connect() as conn:
         rows = conn.execute(
             sql,
-            {
-                "embedding": str(query_embedding.tolist()),
-                "k": k,
-            },
+            {"embedding": str(query_vec.tolist()), "k": k}
         ).fetchall()
 
     results = [
@@ -77,43 +61,36 @@ def retrieve(query: str, top_k: Optional[int] = None) -> List[dict]:
         for row in rows
     ]
 
-    logger.info(
-        f"Retrieved {len(results)} chunks for query: '{query[:60]}...' "
-        f"(top score: {results[0]['score'] if results else 'N/A'})"
-    )
+    top = results[0]["score"] if results else "N/A"
+    logger.info(f"Retrieved {len(results)} chunks | top score: {top} | query: '{query[:60]}'")
     return results
 
 
 def format_context(chunks: List[dict]) -> str:
     """
-    Format retrieved chunks into a single context string for the LLM prompt.
-
-    Each chunk is prefixed with its source filename and similarity score.
+    Format retrieved chunks into a single context block for the LLM prompt.
 
     Args:
         chunks: Output of retrieve().
 
     Returns:
-        Multi-line string to inject as [CONTEXT] in the LLM prompt.
+        String with each chunk numbered, sourced, and scored.
     """
     if not chunks:
         return "No relevant context found."
 
-    parts = []
-    for i, chunk in enumerate(chunks, 1):
-        parts.append(
-            f"[{i}] Source: {chunk['source']} (similarity: {chunk['score']})\n"
-            f"{chunk['content']}"
-        )
+    parts = [
+        f"[{i}] Source: {c['source']} (similarity: {c['score']})\n{c['content']}"
+        for i, c in enumerate(chunks, 1)
+    ]
     return "\n\n---\n\n".join(parts)
 
 
 # ── Quick test ─────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     import sys
-
-    query = sys.argv[1] if len(sys.argv) > 1 else "What is a normal resting heart rate?"
-    chunks = retrieve(query)
-    print(f"\n✓ Top-{len(chunks)} results for: '{query}'\n")
-    for c in chunks:
-        print(f"  [{c['score']}] {c['source']} — {c['content'][:120]}...")
+    q = sys.argv[1] if len(sys.argv) > 1 else "What is a normal resting heart rate?"
+    results = retrieve(q)
+    print(f"\nTop {len(results)} results for: '{q}'\n")
+    for r in results:
+        print(f"  [{r['score']}] {r['source']} — {r['content'][:120]}...")
