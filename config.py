@@ -10,14 +10,21 @@ load_dotenv()
 
 
 class DBConfig:
-    host: str = os.getenv("POSTGRES_HOST", "localhost")
-    port: int = int(os.getenv("POSTGRES_PORT", 5432))
-    db: str = os.getenv("POSTGRES_DB", "caresync")
-    user: str = os.getenv("POSTGRES_USER", "postgres")
+    # Supports a full DATABASE_URL (Supabase / any hosted Postgres)
+    # or individual host/port/db/user/password vars as fallback
+    database_url: str = os.getenv("DATABASE_URL", "")
+
+    # Individual fields (used only if DATABASE_URL is not set)
+    host: str     = os.getenv("POSTGRES_HOST", "localhost")
+    port: int     = int(os.getenv("POSTGRES_PORT", 5432))
+    db: str       = os.getenv("POSTGRES_DB", "postgres")
+    user: str     = os.getenv("POSTGRES_USER", "postgres")
     password: str = os.getenv("POSTGRES_PASSWORD", "")
 
     @classmethod
     def dsn(cls) -> str:
+        if cls.database_url:
+            return cls.database_url
         return (
             f"postgresql://{cls.user}:{cls.password}"
             f"@{cls.host}:{cls.port}/{cls.db}"
