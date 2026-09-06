@@ -73,12 +73,11 @@ def init_db(engine) -> int:
             );
         """))
         # IVFFlat index for fast approximate nearest-neighbour search
-        conn.execute(text("""
-            CREATE INDEX IF NOT EXISTS idx_chunks_embedding
-            ON document_chunks
-            USING ivfflat (embedding vector_cosine_ops)
-            WITH (lists = 100);
-        """))
+        # NOTE: IVFFlat index is created manually in Supabase SQL editor
+        # to avoid statement timeout on free tier. Run this once:
+        # CREATE INDEX IF NOT EXISTS idx_chunks_embedding
+        # ON document_chunks USING ivfflat (embedding vector_cosine_ops)
+        # WITH (lists = 100);
         conn.commit()
 
     logger.info(f"DB ready — table 'document_chunks' (dim={dim})")
