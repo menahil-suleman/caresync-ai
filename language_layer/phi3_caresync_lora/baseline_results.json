@@ -1,0 +1,69 @@
+{
+  "metrics": {
+    "label": "baseline",
+    "exact_match": 0.433,
+    "avg_overlap": 0.457
+  },
+  "samples": [
+    {
+      "question": "Why is physical activity important in the context of transport?",
+      "expected": "Physical activity in transport can contribute to overall health, reduce environmental impact, and promote sustainable mobility.",
+      "generated": "Physical activity plays a significant role in the context of transport for several reasons, which span health, environmental, and societal benefits:\n\n1. Health Benefits:\n   - **Active Transportation**: Choosing walking, cycling, or other forms of active transportation (like skateboarding or rollerblading) instead of motorized vehicles can significantly increase daily physical activity levels. This can lead to improved cardiovascular health, reduced risk of obesity, diabetes, and other chronic diseases.\n   - **Mental Health**: Regular physical activity, including commuting, can reduce stress, anxiety, and depression. It can also improve mood and",
+      "overlap": 0.5625
+    },
+    {
+      "question": "What is flexibility in terms of physical fitness?",
+      "expected": "Flexibility is the range of motion possible at a joint, specific to each joint and dependent on variables such as ligament and tendon tightness.",
+      "generated": "Flexibility in terms of physical fitness refers to the range of motion available at a joint or group of joints. It is an essential component of overall fitness and well-being, as it allows for the efficient and safe performance of physical activities, reduces the risk of injuries, and improves posture and balance.\n\nFlexibility is influenced by several factors, including:\n\n1. Muscle length: The length of the muscles surrounding a joint determines the range of motion. Longer muscles generally allow for greater flexibility.\n\n2. Joint structure: The shape and structure of the joint itself can affect flexibility. Some joints, like the hip joint, have a larger range",
+      "overlap": 0.5416666666666666
+    },
+    {
+      "question": "How many minutes of moderate-intensity aerobic physical activity are recommended per week for additional health benefits?",
+      "expected": "150 minutes",
+      "generated": "The Centers for Disease Control and Prevention (CDC) and the American Heart Association (AHA) recommend at least 150 minutes of moderate-intensity aerobic physical activity per week for additional health benefits. This can be broken down into 30 minutes a day, five days a week. Moderate-intensity activities include brisk walking, dancing, gardening, or anything that raises your heart rate and makes you breathe faster but still allows you to talk.\n\n\nFor those who are not accustomed to regular exercise, it's recommended to start slowly and gradually increase the duration and intensity of the activity. It's also important to note",
+      "overlap": 1.0
+    },
+    {
+      "question": "What is the recommended frequency for incorporating moderate- to vigorous-intensity aerobic activities and muscle-strengthening exercises for postpartum women?",
+      "expected": "On at least days a week",
+      "generated": "The American College of Obstetricians and Gynecologists (ACOG) recommends that postpartum women gradually return to physical activity, with a focus on moderate-intensity aerobic activities and muscle-strengthening exercises. Here are the general guidelines:\n\n1. Aerobic Activities: It is recommended that postpartum women engage in at least 150 minutes of moderate-intensity aerobic activity per week. This can be broken down into 30 minutes a day, five days a week. However, it's important to start slowly and gradually increase the intensity and duration of the activity as the body recovers.",
+      "overlap": 0.8333333333333334
+    },
+    {
+      "question": "What is the recommended starting point for physical activity for pregnant and postpartum women according to good practice statements?",
+      "expected": "Starting with small amounts of physical activity",
+      "generated": "The American College of Obstetricians and Gynecologists (ACOG) recommends that pregnant and postpartum women should engage in at least 150 minutes of moderate-intensity aerobic activity each week. This recommendation is based on good practice statements and is supported by various health organizations, including the World Health Organization (WHO) and the Centers for Disease Control and Prevention (CDC).\n\nHere are some key points to consider when starting physical activity during pregnancy and postpartum:\n\n1. Consult with your healthcare provider: Before starting any exercise program, it's essential to consult with your healthcare provider, especially if",
+      "overlap": 0.7142857142857143
+    },
+    {
+      "question": "How do flexibility exercises affect the range of motion in joints?",
+      "expected": "Flexibility exercises enhance the ability of a joint to move through its full range of motion.",
+      "generated": "Flexibility exercises, also known as stretching, play a crucial role in maintaining and improving the range of motion (ROM) in joints. The range of motion refers to the full movement potential of a joint, usually its range of flexion and extension. Here's how flexibility exercises affect joint ROM:\n\n1. Increased muscle length: Flexibility exercises involve stretching the muscles surrounding a joint. When muscles are stretched, they lengthen, which can increase the joint's range of motion. This is because muscles and tendons are interconnected with joints, and when muscles are more flexible, they allow for greater movement at",
+      "overlap": 0.6875
+    },
+    {
+      "question": "Is it permissible to use WHO's work for commercial purposes without endorsement?",
+      "expected": "Yes, provided the work is appropriately cited and the use does not suggest WHO endorsement.",
+      "generated": "The World Health Organization (WHO), as a specialized agency of the United Nations, has specific guidelines regarding the use of its work. Generally, WHO's materials and intellectual property are protected, and their use is subject to certain conditions.\n\nHere are some key points to consider:\n\n1. **Copyright and Licensing**: WHO materials are often protected by copyright. The organization may have licensing agreements that allow for the use of its content under specific conditions.\n\n2. **Attribution**: Even if you are allowed to use WHO materials, proper attribution is usually required. This means you must credit WHO as the source of the content.",
+      "overlap": 0.3333333333333333
+    },
+    {
+      "question": "What is the level of certainty regarding the benefits of physical activity for children and adolescents who are not meeting recommendations?",
+      "expected": "Moderate certainty evidence",
+      "generated": "The level of certainty regarding the benefits of physical activity for children and adolescents who are not meeting recommendations is generally high, based on a substantial body of scientific evidence. Here are some key points:\n\n1. **Physical Health Benefits**: Regular physical activity is associated with numerous health benefits for children and adolescents, including improved cardiovascular health, stronger bones and muscles, better weight management, and reduced risk of chronic diseases such as type 2 diabetes, obesity, and hypertension.\n\n2. **Mental Health Benefits**: Physical activity has been shown to improve mental health outcomes, including reduced symptoms",
+      "overlap": 0.3333333333333333
+    },
+    {
+      "question": "What is the recommended starting point for physical activity in older adults aged 65 and above?",
+      "expected": "Starting with small amounts of physical activity",
+      "generated": "The recommended starting point for physical activity in older adults aged 65 and above is to engage in at least 150 minutes of moderate-intensity aerobic activity per week, according to the American Heart Association and the U.S. Department of Health and Human Services. This can be broken down into 30 minutes of moderate-intensity exercise, such as brisk walking, on most days of the week.\n\n\nAdditionally, muscle-strengthening activities on two or more days a week that work all major muscle groups are also advised. It's important for older adults to start slowly and gradually increase the intensity and duration of their activities to avoid injury",
+      "overlap": 0.5714285714285714
+    },
+    {
+      "question": "How is vigorous-intensity physical activity measured relative to an individual's personal capacity?",
+      "expected": "Vigorous-intensity physical activity is measured relative to an individual's personal capacity, which may vary.",
+      "generated": "Vigorous-intensity physical activity is typically measured relative to an individual's personal capacity using several methods, which can be broadly categorized into objective and subjective measures. Here's how these measurements are generally conducted:\n\n1. **Heart Rate Monitoring:**\n   - **Maximal Heart Rate (MHR):** The most common method to gauge intensity is by calculating an individual's MHR, which is often estimated using the formula: MHR = 220 - age. Vigorous activity is usually defined as 70-85% of MHR.\n   - **Heart Rate Reserve (HRR) or the Karvonen Formula:",
+      "overlap": 0.7857142857142857
+    }
+  ]
+}

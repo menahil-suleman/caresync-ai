@@ -1,0 +1,8 @@
+# Large model files — don't commit to git
+*.safetensors
+*.pt
+*.pth
+optimizer.pt
+rng_state.pth
+tokenizer.model
+tokenizer.json
