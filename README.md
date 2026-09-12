@@ -342,5 +342,4 @@ This system is a research prototype. It does not provide medical advice.
 
 ---
 
-*Built by Menahil — targeting Bioinformatics AI Tools (University of Guelph) and
-Agentic Cloud Orchestration (Université Laval) Mitacs Globalink positions.*
+*Built by Menahil*
